@@ -1,4 +1,4 @@
-name: Build Prysm Debug APK
+name: Build Prysm APK
 
 on:
   push:
@@ -11,26 +11,32 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Build Debug APK
+      - name: Configure Last.fm keys (optional)
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SECRET: ${{ secrets.LASTFM_SECRET }}
+        run: |
+          printf "lastfm.apiKey=%s\nlastfm.secret=%s\n" "$LASTFM_API_KEY" "$LASTFM_SECRET" > local.properties
+
+      - name: Build Prysm Release APK (Side-by-Side)
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:assembleDebug
+          ./gradlew :app:assembleRelease -PsideBySide=prysm -PsideByLabel=Prysm
 
       - name: Upload APK
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: prysm-debug-apk
+          name: prysm-apk
           path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error
-          
